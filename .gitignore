@@ -1,0 +1,42 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+*.ipynb
+
+# environments
+.venv/
+venv/
+env/
+
+# logs
+*.log
+nohup.out
+
+# secrets
+.env
+*.pem
+*.key
+*.token
+
+# protected / participant-level / derived data
+data/
+outputs/
+logs/
+crosscohort_bootstrap_ci/
+crosscohort_matched_rerun/
+crosscohort_publication_tables/
+paper_tables_and_figures/
+crosscohort_severity_summary/
+paper_cohorts/
+*.csv
+*.csv.gz
+*.parquet
+*.feather
+*.h5
+*.hdf5
+*.npz
+*.npy
+*.pkl
+*.joblib
+*.nii
+*.nii.gz
