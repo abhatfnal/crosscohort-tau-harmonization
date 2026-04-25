@@ -3,9 +3,9 @@
 OASIS3 GMM-Threshold Sensitivity Analysis
 ==========================================
 The y_target in each OASIS3 subject table was derived from a GMM midpoint
-threshold applied to PET_fSUVR_TOT_CORTMEAN_x.  This script sweeps ±30 % around
-that threshold to verify that classification performance (logreg CV AUC) is not
-sensitive to the exact cut-point choice.
+threshold applied to the Tauopathy SUVR column (confirmed via build_metadata.json).
+This script sweeps ±30 % around that threshold to verify that classification
+performance (logreg CV AUC) is not sensitive to the exact cut-point choice.
 
 For each cohort × threshold combination the script reports:
   - N_pos / N_neg
@@ -43,12 +43,12 @@ COHORTS = {
     "oasis3_tau180": {
         "label": "OASIS3 tau180",
         "path": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv",
-        "suvr_col": "PET_fSUVR_TOT_CORTMEAN_x",
+        "suvr_col": "Tauopathy",
     },
     "oasis3_tau90": {
         "label": "OASIS3 tau90",
         "path": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv",
-        "suvr_col": "PET_fSUVR_TOT_CORTMEAN_x",
+        "suvr_col": "Tauopathy",
     },
 }
 
