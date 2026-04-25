@@ -1,74 +1,268 @@
-# Cross-Cohort Tau Harmonization Analysis
 
-Code for the cross-cohort tau-positivity harmonization study comparing ADNI, OASIS3, and NACC.
+# 🧠 ADNI MRI Classification
 
-## Project summary
+Framework for training and evaluating deep learning models on the [ADNI MRI dataset](https://adni.loni.usc.edu/).  
+Supports flexible configuration, modular 3D CNN architectures, SPM-based preprocessing, and automatic experiment tracking.
 
-This repository contains the analysis code used for:
-- within-cohort severity-strip ablation
-- OASIS3 feature availability audit
-- matched-feature rerun across ADNI and OASIS3
-- bootstrap confidence intervals for primary AUC contrasts
-- publication tables and figures
-- sensitivity analyses for CDR-SB=0 restriction and OASIS3 threshold choices
+---
 
-## Main scripts
+## 🗂️ Requirements
+- Python 3.10
+- Matlab
+- [SPM]( https://www.fil.ion.ucl.ac.uk/spm/software/spm12/ )
 
-- `crosscohort_tau_severity_strip.py`  
-  Runs within-cohort severity-strip ablation analyses.
+---
+## 🔧 Setup Instructions
 
-- `audit_oasis_feature_availability.py`  
-  Audits raw and subject-level OASIS3 tables for recoverable variables.
+### 1. Download and Unzip SPM (if not already downloaded)
 
-- `crosscohort_tau_matched_rerun.py`  
-  Runs the matched-feature rerun across cohorts using only shared harmonized variables.
+You need SPM12 for SPM-based preprocessing. If not already installed, download and unzip with the commands below. Change the unzip path before executing.
 
-- `rebuild_crosscohort_publication_tables.py`  
-  Rebuilds publication-ready primary and supplementary tables.
+```bash
+wget -O spm.zip https://github.com/spm/spm/releases/download/25.01.02/spm_25.01.02.zip
+unzip spm.zip -d /path/to/unzip/
+```
 
-- `bootstrap_crosscohort_auc_ci.py`  
-  Computes bootstrap confidence intervals for AUCs and AUC contrasts.
+- This will create `/path/to/unzip/spm`.
+- You may change the URL to download a different release.
+- 🔗 [SPM Releases on GitHub](https://github.com/spm/spm/releases)
 
-- `plot_crosscohort_severity_figure.py`  
-  Generates the primary severity-decomposition figure.
+---
 
-- `build_table1_and_figure3.py`  
-  Builds Table 1 demographics and the harmonization comparison figure.
+### 2. Open and edit `env_setup.sh`
 
-- `summarize_crosscohort_severity_profiles.py`  
-  Summarizes cohort-level severity profiles.
+Set the correct paths and environment activation commands. Example:
 
-- `sensitivity_cdrsb0.py`  
-  Sensitivity analysis for cognitively unimpaired / CDR-SB=0 subsets.
+```bash
+# 1)  Paste below the commands to activate your environment.
 
-- `oasis3_threshold_sensitivity.py`  
-  Sensitivity analysis for OASIS3 tau-threshold definitions.
+source /software/python-anaconda-2022.05-el8-x86_64/etc/profile.d/conda.sh
 
-## Repository structure
+conda activate adni_rcc
+module load matlab
 
-- `figures/` — manuscript figures
-- `crosscohort_bootstrap_ci/` — bootstrap outputs
-- `crosscohort_matched_rerun/` — matched-feature rerun outputs
-- `crosscohort_publication_tables/` — publication-ready tables
-- `paper_tables_and_figures/` — manuscript support files
+# 2) Set required environment variables
 
-## Reproducibility notes
+# Absolute path to SPM12 folder (WITHOUT final /)
+export SPM_PATH="/path/to/unzip/spm"
 
-This repository contains code and aggregate outputs only.
-No participant-level ADNI, OASIS3, or NACC data are redistributed.
+# Absolute path to diagnosis file DXSUM_05Apr2025.csv
+export DIAGNOSIS_FILE="/path/to/DXSUM_05Apr2025.csv"
 
-Users must independently obtain dataset access through the relevant data use agreements:
-- ADNI
-- OASIS3
-- NACC
+```
 
-## Manuscript context
+### 3. Install Python Dependencies
 
-This repository supports the manuscript:
+Activate your environment using
 
-**Feature harmonization reveals that apparent cross-cohort differences in tau-positivity prediction are driven by clinical severity and variable availability**
+```bash
+source env_setup.sh
 
-## Author
+```
+Install Python requirements with:
 
-Avinay Bhat  
-University of Chicago
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🚀 Quickstart
+
+### 1. Activate your environment 
+
+```bash
+source env_setup.sh
+```
+
+### 2. Run preprocessing
+
+Open one preprocessing pipeline folder under the `data/` folder (recommended: `data/preprocessing_dicom_spm`)  and follow the instructions to produce the preprocessed data.
+
+### 3. Run training with ResNet18 model
+
+After having updated the paths to `trainval.csv` and `test.csv` in the desired configuation file, as described in the preprocessing instructions, from the project root directory run
+
+```bash 
+python train.py --config configs/training/resnet18.yaml --job
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+├── configs/
+│   ├── schema.py              # Config schema & validation
+│   └── training/*.yaml        # Training configs
+├── data/
+│   ├── preprocessing_dicom_spm/
+│   │   ├── run.sh             # Runs SPM-based preprocessing
+│   │   └── data/*.nii, *.csv  # Output images and splits
+│   └── DXSUM_05Apr2025.csv    # ADNI subject metadata
+├── experiments/               # Logs, metrics, models per run
+├── models/                    # Custom + standard model architectures
+├── train.py                   # Training CLI
+├── utils/                     # Tools for splits, plotting, etc
+└── README.md                   # This document
+```
+
+---
+
+## ⚙️ Configuration System
+
+YAML files under `configs/training/` define all model, data, and training settings.
+
+You can **merge multiple configs**, and **override any field from the CLI**.
+
+```bash
+python train.py \
+  --config configs/training/default.yaml \
+  --config configs/training/custom_3dcnn.yaml \
+  training.epochs=300 training.optimizer.lr=1e-4
+```
+
+### 🔢 Example Config (default.yaml)
+
+```yaml
+model:
+  name: resnet18
+  num_classes: 3
+  in_channels: 1
+  init_filters: 4
+
+training:
+  batch_size: 8
+  epochs: 200
+  optimizer:
+    name: adam
+    lr: 1e-3
+  scheduler:
+    name: CosineAnnealingLR
+    t_max: 200
+    lr_max: 1e-3
+    lr_min: 2e-6
+
+data:
+  trainval_csv: ./data/.../trainval.csv
+  test_csv: ./data/.../test.csv
+  augmentation:
+    random_crop:
+      p: 1
+
+cross_validation:
+  method: kfold
+  folds: 5
+```
+
+### 🧮 Config Reference
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `model.name` | Model architecture | `resnet18`, `custom_3dcnn` |
+| `training.epochs` | Number of training epochs | `200` |
+| `data.trainval_csv` | Path to training CSV | `./data/.../trainval.csv` |
+| `cross_validation.method` | CV method | `kfold`, `none` |
+
+---
+
+## 🧠 Model Registry
+
+- Add a model:
+  1. Subclass `models/base.py`
+  2. Register it in `models/registry.py`
+
+Built-ins: `simple_3dcnn`, `resnet18`, `custom_3dcnn`, `simple_3dcnn_gradcam`.
+
+---
+
+## 📊 Experiment Logging
+
+Each training run creates a folder inside `experiments/`, named by timestamp or job ID.
+
+Contents include:
+- Merged YAML config
+- `losses.csv` (train/val loss)
+- `metrics.csv` (acc, AUC, precision/recall)
+- Confusion matrices
+- Model checkpoints (`.pth`)
+
+---
+
+## 🗂️ Preprocessing Pipelines
+
+Each preprocessing folder contains:
+- A `run.sh` script
+- A `data/` subfolder with:
+  - `.nii` MRI volumes
+  - `trainval.csv`, `test.csv` with labels and paths
+
+The default is `data/preprocessing_dicom_spm/`, which uses Matlab + SPM.
+
+---
+
+## 🛠️ Utilities
+
+| Script | Purpose |
+|--------|---------|
+| `train_test_split.py` | Split dataset into train/val/test |
+| `plot_training_log.py` | Plot loss/metric curves |
+| `gradcam_visualize.py` | Visualize saliency maps |
+| `plot_histogram.py` | Plot class distributions |
+
+---
+
+## 🏷️ Data Labels
+
+| Label | Description |
+|-------|-------------|
+| 1 | CN (Cognitively Normal) |
+| 2 | MCI (Mild Cognitive Impairment) |
+| 3 | AD (Alzheimer’s Disease) |
+
+Source: `DXSUM_05Apr2025.csv`
+
+---
+
+## 🧪 Example Commands
+
+### ✅ Local training with ResNet18
+
+```bash
+python train.py \
+  --config configs/training/resnet18.yaml \
+  data.trainval_csv=./data/.../trainval.csv \
+  data.test_csv=./data/.../test.csv
+```
+
+### ✅ Submit to RCC with custom overrides
+
+```bash
+python train.py \
+  --config configs/training/custom_3dcnn.yaml \
+  --job \
+  training.epochs=300 \
+  training.optimizer.lr=5e-4
+```
+
+---
+
+## 🧯 Troubleshooting
+
+| Problem | Solution |
+|--------|----------|
+| `matlab: command not found` | Ensure Matlab is installed and in PATH |
+| `SPM not found` | Check `SPM_DIR` in `env_setup.sh` |
+| `trainval.csv not found` | Run the preprocessing script to generate splits |
+| `schema validation error` | Config is missing required fields — see `schema.py` |
+
+---
+
+## 📎 Resources
+
+- [ADNI Data Portal](https://adni.loni.usc.edu/)
+- [SPM12 Releases](https://github.com/spm/spm/releases)
+
+---
+
+For questions or contributions, please open an issue or pull request.
