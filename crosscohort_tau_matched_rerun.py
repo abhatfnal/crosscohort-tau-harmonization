@@ -15,6 +15,7 @@ from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 
 RANDOM_STATE = 42
 N_SPLITS = 5
+PRIMARY_MODEL = "logreg_balanced"
 
 COHORTS = {
     "adni_tau90": {
@@ -51,7 +52,8 @@ COHORTS = {
     },
 }
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/crosscohort_matched_rerun")
+ROOT = Path(__file__).resolve().parent
+OUTDIR = ROOT / "crosscohort_matched_rerun"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 DEMO_NUM = ["age_h", "education_years_h", "apoe_e4_count_h", "apoe_e4_carrier_h"]
@@ -443,10 +445,18 @@ def main():
         )
         best.to_csv(cohort_outdir / "best_model_per_experiment.csv", index=False)
 
+        primary = (
+            cohort_all[cohort_all["model"] == PRIMARY_MODEL]
+            .sort_values(["experiment"])
+            .drop_duplicates(subset=["experiment"], keep="first")
+            .reset_index(drop=True)
+        )
+        primary.to_csv(cohort_outdir / "primary_model_per_experiment.csv", index=False)
+
         all_metrics.append(cohort_all)
         core_rows.append(
             build_core_row(
-                best_df=best,
+                best_df=primary,
                 cohort_key=cohort_key,
                 cohort_meta=meta,
                 df=df,
@@ -465,6 +475,14 @@ def main():
         .reset_index(drop=True)
     )
     best_global.to_csv(OUTDIR / "best_model_per_experiment.csv", index=False)
+
+    primary_global = (
+        all_metrics_df[all_metrics_df["model"] == PRIMARY_MODEL]
+        .sort_values(["cohort_key", "experiment"])
+        .drop_duplicates(subset=["cohort_key", "experiment"], keep="first")
+        .reset_index(drop=True)
+    )
+    primary_global.to_csv(OUTDIR / "primary_model_per_experiment.csv", index=False)
 
     core_df = pd.DataFrame(core_rows).sort_values(["cohort", "window"]).reset_index(drop=True)
     core_df.to_csv(OUTDIR / "matched_core_summary.csv", index=False)
@@ -497,6 +515,7 @@ def main():
     print(" ", OUTDIR / "shared_feature_manifest.json")
     print(" ", OUTDIR / "all_metrics.csv")
     print(" ", OUTDIR / "best_model_per_experiment.csv")
+    print(" ", OUTDIR / "primary_model_per_experiment.csv")
     print(" ", OUTDIR / "matched_core_summary.csv")
 
 

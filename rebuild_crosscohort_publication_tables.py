@@ -3,10 +3,11 @@ from pathlib import Path
 import pandas as pd
 
 
-MATCHED_SUMMARY = "/project/aereditato/abhat/adni-mri-classification/crosscohort_matched_rerun/matched_core_summary.csv"
-EXISTING_PRIMARY = "/project/aereditato/abhat/adni-mri-classification/crosscohort_severity_summary/crosscohort_primary_core_table.csv"
+ROOT = Path(__file__).resolve().parent
+MATCHED_SUMMARY = ROOT / "crosscohort_matched_rerun" / "matched_core_summary.csv"
+EXISTING_PRIMARY = ROOT / "crosscohort_severity_summary" / "crosscohort_primary_core_table.csv"
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/crosscohort_publication_tables")
+OUTDIR = ROOT / "crosscohort_publication_tables"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 
