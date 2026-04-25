@@ -1,0 +1,22 @@
+{
+  "cohorts": {
+    "adni_tau90": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau90/subject_level_input_table.csv",
+    "adni_tau180": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau180/subject_level_input_table.csv",
+    "oasis3_tau90": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv",
+    "oasis3_tau180": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv"
+  },
+  "shared_demo_num": [
+    "age_h",
+    "apoe_e4_carrier_h",
+    "apoe_e4_count_h",
+    "education_years_h"
+  ],
+  "shared_demo_cat": [
+    "sex_h"
+  ],
+  "shared_severity_num": [
+    "cdr_sumboxes_h",
+    "faq_total_h"
+  ],
+  "note": "Shared features are defined as harmonized columns with at least one non-missing value in every ADNI/OASIS tau cohort."
+}

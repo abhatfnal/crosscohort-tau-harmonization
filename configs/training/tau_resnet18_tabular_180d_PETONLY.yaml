@@ -1,0 +1,61 @@
+# Tau Positivity Prediction - ResNet18 with Tabular Fusion
+# Tier 4: Plasma + Amyloid + MRI
+
+experiment:
+  name: tau_resnet18_tabular
+  seed: 42
+
+data:
+  trainval_csv: /project/aereditato/abhat/ADNI/ARC_06Mar2026/output/trainval_taupos_180d_PETONLY.csv
+  test_csv:     /project/aereditato/abhat/ADNI/ARC_06Mar2026/output/test_taupos_180d_PETONLY.csv
+  folds_csv:    /project/aereditato/abhat/ADNI/ARC_06Mar2026/output/folds_taupos_180d_trainval_5fold.csv
+  
+  tabular_cols:
+    - PLASMA_pT217_F
+    - PLASMA_AB42_AB40_F
+    - PLASMA_NfL_F
+    - PLASMA_GFAP_F
+    - AMY6MM_CENTILOIDS
+  
+  num_workers: 4
+  pin_memory: true
+
+# Optional augmentation (comment out to disable)
+augmentation:
+  random_flip:
+    p: 0.5
+  random_affine:
+    degrees: 5
+    translation: 5
+    p: 0.3
+  random_noise:
+    std: 0.02
+    p: 0.2
+
+model:
+  name: ResNet18Tabular
+  num_classes: 2
+  in_channels: 1
+  init_filters: 8
+  dropout: 0.3
+  tabular_dim: 5  # Must match len(tabular_cols)
+  tabular_hidden: 16
+
+training:
+  epochs: 50
+  batch_size: 8
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  
+  # Class weights computed dynamically per fold
+  use_class_weights: true
+  
+  # Early stopping
+  patience: 10
+  min_delta: 0.001
+
+  # LR scheduler
+  scheduler: cosine
+
+evaluation:
+  threshold_metric: f1  # or 'youden'

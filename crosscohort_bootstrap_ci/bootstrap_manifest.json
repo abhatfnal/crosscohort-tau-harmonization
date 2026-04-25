@@ -1,0 +1,75 @@
+{
+  "cohorts": [
+    "adni_tau90",
+    "adni_tau180",
+    "oasis3_tau180"
+  ],
+  "n_bootstrap": 1000,
+  "n_splits": 5,
+  "seed": 42,
+  "primary_model": "logreg_balanced",
+  "features": {
+    "reference_combined": {
+      "num": [
+        "age_h",
+        "apoe_e4_carrier_h",
+        "apoe_e4_count_h",
+        "education_years_h",
+        "cdr_sumboxes_h",
+        "faq_total_h"
+      ],
+      "cat": [
+        "sex_h"
+      ]
+    },
+    "severity_only": {
+      "num": [
+        "cdr_sumboxes_h",
+        "faq_total_h"
+      ],
+      "cat": []
+    },
+    "demo_only": {
+      "num": [
+        "age_h",
+        "apoe_e4_carrier_h",
+        "apoe_e4_count_h",
+        "education_years_h"
+      ],
+      "cat": [
+        "sex_h"
+      ]
+    },
+    "minus_all_cdr": {
+      "num": [
+        "age_h",
+        "apoe_e4_carrier_h",
+        "apoe_e4_count_h",
+        "education_years_h",
+        "faq_total_h"
+      ],
+      "cat": [
+        "sex_h"
+      ]
+    }
+  },
+  "robustness_models_csv": "/project/aereditato/abhat/adni-mri-classification/crosscohort_matched_rerun/best_model_per_experiment.csv",
+  "adni_tau90_best_models": {
+    "reference_combined": "logreg_balanced",
+    "severity_only": "logreg_balanced",
+    "demo_only": "logreg_balanced",
+    "minus_all_cdr": "logreg_balanced"
+  },
+  "adni_tau180_best_models": {
+    "reference_combined": "logreg_balanced",
+    "severity_only": "logreg_balanced",
+    "demo_only": "logreg_balanced",
+    "minus_all_cdr": "logreg_balanced"
+  },
+  "oasis3_tau180_best_models": {
+    "reference_combined": "logreg_balanced",
+    "severity_only": "random_forest_balanced",
+    "demo_only": "logreg_balanced",
+    "minus_all_cdr": "logreg_balanced"
+  }
+}

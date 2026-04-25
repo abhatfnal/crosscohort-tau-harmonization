@@ -1,0 +1,9 @@
+cohort_key,cohort_label,experiment,n_cdrsb0,n_pos_cdrsb0,auc,reliable,note
+adni_tau90,ADNI tau90,reference_combined,215,5,0.4286,False,N_pos below reliable threshold
+adni_tau90,ADNI tau90,demo_only,215,5,0.4286,False,N_pos below reliable threshold
+adni_tau180,ADNI tau180,reference_combined,282,5,0.4348,False,N_pos below reliable threshold
+adni_tau180,ADNI tau180,demo_only,282,5,0.4348,False,N_pos below reliable threshold
+oasis3_tau180,OASIS3 tau180,reference_combined,311,15,0.8827,True,
+oasis3_tau180,OASIS3 tau180,demo_only,311,15,0.8827,True,
+oasis3_tau90,OASIS3 tau90,reference_combined,126,4,0.8218,False,N_pos below reliable threshold
+oasis3_tau90,OASIS3 tau90,demo_only,126,4,0.8218,False,N_pos below reliable threshold

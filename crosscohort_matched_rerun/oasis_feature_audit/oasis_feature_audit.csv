@@ -1,0 +1,25 @@
+dataset,path,feature_family,matched_col,nonmissing_n,unique_nonnull,candidate_columns
+oasis3_tau90_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau90_amy90_fs90_fixed.csv,age,days_to_visit,8648,3428,age at visit|AgeatEntry
+oasis3_tau90_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau90_amy90_fs90_fixed.csv,apoe,APOE,8591,7,APOE|apoe_e4_carrier
+oasis3_tau90_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau90_amy90_fs90_fixed.csv,moca,,0,0,
+oasis3_tau90_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau90_amy90_fs90_fixed.csv,cdr_global,,0,0,CDRSUM|CDRTOT
+oasis3_tau90_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau90_amy90_fs90_fixed.csv,cdr_sumboxes,CDRSUM,8620,29,CDRSUM|CDRTOT
+oasis3_tau90_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau90_amy90_fs90_fixed.csv,faq,faq_total,7656,55,faq_total
+oasis3_tau180_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau180_amy180_fs180_fixed.csv,age,days_to_visit,8648,3428,age at visit|AgeatEntry
+oasis3_tau180_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau180_amy180_fs180_fixed.csv,apoe,APOE,8591,7,APOE|apoe_e4_carrier
+oasis3_tau180_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau180_amy180_fs180_fixed.csv,moca,,0,0,
+oasis3_tau180_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau180_amy180_fs180_fixed.csv,cdr_global,,0,0,CDRSUM|CDRTOT
+oasis3_tau180_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau180_amy180_fs180_fixed.csv,cdr_sumboxes,CDRSUM,8620,29,CDRSUM|CDRTOT
+oasis3_tau180_raw,/project/aereditato/abhat/oasis/phase0/oasis3_clinical_master_v7_tau180_amy180_fs180_fixed.csv,faq,faq_total,7656,55,faq_total
+oasis3_tau90_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv,age,age_h,142,138,age at visit|AgeatEntry|age_h
+oasis3_tau90_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv,apoe,apoe_e4_count_h,142,3,APOE|apoe_e4_carrier|apoe_e4_count_h|apoe_e4_carrier_h
+oasis3_tau90_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv,moca,,0,0,
+oasis3_tau90_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv,cdr_global,,0,0,CDRSUM|CDRTOT|cdr_sumboxes_h
+oasis3_tau90_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv,cdr_sumboxes,cdr_sumboxes_h,142,9,CDRSUM|CDRTOT|cdr_sumboxes_h
+oasis3_tau90_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv,faq,faq_total_h,142,16,faq_total|faq_total_h
+oasis3_tau180_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv,age,age_h,368,340,age at visit|AgeatEntry|age_h
+oasis3_tau180_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv,apoe,apoe_e4_count_h,367,3,APOE|apoe_e4_carrier|apoe_e4_count_h|apoe_e4_carrier_h
+oasis3_tau180_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv,moca,,0,0,
+oasis3_tau180_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv,cdr_global,,0,0,CDRSUM|CDRTOT|cdr_sumboxes_h
+oasis3_tau180_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv,cdr_sumboxes,cdr_sumboxes_h,368,13,CDRSUM|CDRTOT|cdr_sumboxes_h
+oasis3_tau180_subject,/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv,faq,faq_total_h,367,26,faq_total|faq_total_h

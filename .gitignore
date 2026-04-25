@@ -5,27 +5,28 @@ __pycache__/
 
 # Logs
 *.log
-*.csv
-
-# Output files
-*.pdf
-*.jpg
-*.png
-*.nii
-*.nii.gz
-*.pth
-*.npy
 *.out
 *.err
 
-# Experiments
-experiments/*
-
-
-# Datasets
+# Large binary / model files
+*.pth
+*.npy
+*.nii
+*.nii.gz
 *.dcm
+*.jpg
+
+# Backup files
+*.bak
+
+# Experiments and training run outputs
+experiments/*
+outputs/
+
+# Raw imaging data
 data/*/data/*
 data/raw
+data/preprocessing_dicom_spm_2/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -41,6 +42,3 @@ unsloth_compiled_cache/
 output.log
 spm/
 spm.zip
-data/preprocessing_dicom_spm_2/data_ADNI_3_3T_3D/
-data/preprocessing_dicom_spm_2/pet_paths_output.txt
-*.csv

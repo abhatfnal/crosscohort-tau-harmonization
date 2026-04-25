@@ -1,0 +1,73 @@
+cohort_key,cohort_label,endpoint_family,endpoint_label,supplement_only,experiment_alias,experiment_name,auc,ap,bal_acc,f1
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,ref,reference_combined,0.8687847222222222,0.6057720886395044,0.8083333333333332,0.6093137421244924
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,severity,severity_only,0.8401909722222223,0.5344732754426949,0.7805555555555556,0.5164946882059053
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,demo,demo_only,0.7429513888888889,0.4115044657494947,0.6740277777777777,0.4246732026143791
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_all_cdr,minus_all_cdr,0.7429513888888889,0.4115044657494947,0.6740277777777777,0.4246732026143791
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_cdr_faq,minus_cdr_faq,0.7429513888888889,0.4115044657494947,0.6740277777777777,0.4246732026143791
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_cdr_moca,minus_cdr_moca,0.7429513888888889,0.4115044657494947,0.6740277777777777,0.4246732026143791
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_faq_moca,minus_faq_moca,0.8687847222222222,0.6057720886395044,0.8083333333333332,0.6093137421244924
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_moca,minus_moca,0.8687847222222222,0.6057720886395044,0.8083333333333332,0.6093137421244924
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_faq,minus_faq,0.8687847222222222,0.6057720886395044,0.8083333333333332,0.6093137421244924
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_cdr_global,minus_cdr_global,0.85,0.60041331534488,0.7969444444444443,0.6020181786548925
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_cdr_sumboxes,minus_cdr_sumboxes,0.8656712962962965,0.5941472384200249,0.7947222222222223,0.599165337129282
+adni_tau90,ADNI tau90,tau_binary,tau positivity,False,minus_fullstrip,minus_cdr_faq_moca,0.7429513888888889,0.4115044657494947,0.6740277777777777,0.4246732026143791
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,ref,reference_combined,0.880395938178918,0.5843339685287081,0.8159917017297802,0.5943380686869892
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,severity,severity_only,0.8560597310452932,0.5200543909183895,0.7997485424744933,0.5006708234294441
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,demo,demo_only,0.7409018095316668,0.3810546697564185,0.6885862690097077,0.4036165596931574
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_all_cdr,minus_all_cdr,0.7409018095316668,0.3810546697564185,0.6885862690097077,0.4036165596931574
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_cdr_faq,minus_cdr_faq,0.7409018095316668,0.3810546697564185,0.6885862690097077,0.4036165596931574
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_cdr_moca,minus_cdr_moca,0.7409018095316668,0.3810546697564185,0.6885862690097077,0.4036165596931574
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_faq_moca,minus_faq_moca,0.880395938178918,0.5843339685287081,0.8159917017297802,0.5943380686869892
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_moca,minus_moca,0.880395938178918,0.5843339685287081,0.8159917017297802,0.5943380686869892
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_faq,minus_faq,0.880395938178918,0.5843339685287081,0.8159917017297802,0.5943380686869892
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_cdr_global,minus_cdr_global,0.8588304045320794,0.5170515318326941,0.8055506283859968,0.5936326206093648
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_cdr_sumboxes,minus_cdr_sumboxes,0.8750051563402359,0.56497130075932,0.8053139523691664,0.5818416921424441
+adni_tau180,ADNI tau180,tau_binary,tau positivity,False,minus_fullstrip,minus_cdr_faq_moca,0.7409018095316668,0.3810546697564185,0.6885862690097077,0.4036165596931574
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,ref,reference_combined,0.935897435897436,0.8285714285714285,0.8871794871794872,0.6076190476190476
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,severity,severity_only,0.8532051282051283,0.6783562138344748,0.8217948717948719,0.6866666666666668
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,demo,demo_only,0.7307692307692307,0.4507411067193677,0.6448717948717949,0.2715032679738562
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_all_cdr,minus_all_cdr,0.8461538461538461,0.4863095238095238,0.767948717948718,0.3616161616161616
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_cdr_faq,minus_cdr_faq,0.7307692307692307,0.4507411067193677,0.6448717948717949,0.2715032679738562
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_cdr_moca,minus_cdr_moca,0.8461538461538461,0.4863095238095238,0.767948717948718,0.3616161616161616
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_faq_moca,minus_faq_moca,0.9256410256410256,0.7609523809523809,0.8794871794871796,0.5774603174603173
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_moca,minus_moca,,,,
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_faq,minus_faq,0.9256410256410256,0.7609523809523809,0.8794871794871796,0.5774603174603173
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_cdr_global,minus_cdr_global,,,,
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_cdr_sumboxes,minus_cdr_sumboxes,0.8461538461538461,0.4863095238095238,0.767948717948718,0.3616161616161616
+oasis3_tau90,OASIS3 tau90,tau_binary,tau positivity (derived),False,minus_fullstrip,minus_cdr_faq_moca,0.7307692307692307,0.4507411067193677,0.6448717948717949,0.2715032679738562
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,ref,reference_combined,0.9328151709401707,0.7030706827031217,0.8398130341880343,0.5790281385281385
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,severity,severity_only,0.8135042735042735,0.5493332789917229,0.7738995726495725,0.5767965367965369
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,demo,demo_only,0.792809829059829,0.4451032050183516,0.7247275641025641,0.4184675954705573
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_all_cdr,minus_all_cdr,0.864241452991453,0.5186421988363517,0.7769364316239317,0.476826762246117
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_cdr_faq,minus_cdr_faq,0.792809829059829,0.4451032050183516,0.7247275641025641,0.4184675954705573
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_cdr_moca,minus_cdr_moca,0.864241452991453,0.5186421988363517,0.7769364316239317,0.476826762246117
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_faq_moca,minus_faq_moca,0.9324786324786324,0.6990137361112779,0.8428899572649573,0.5885942760942761
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_moca,minus_moca,,,,
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_faq,minus_faq,0.9324786324786324,0.6990137361112779,0.8428899572649573,0.5885942760942761
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_cdr_global,minus_cdr_global,,,,
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_cdr_sumboxes,minus_cdr_sumboxes,0.864241452991453,0.5186421988363517,0.7769364316239317,0.476826762246117
+oasis3_tau180,OASIS3 tau180,tau_binary,tau positivity (derived),False,minus_fullstrip,minus_cdr_faq_moca,0.792809829059829,0.4451032050183516,0.7247275641025641,0.4184675954705573
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,ref,reference_combined,0.9279096586473636,0.8000787655933888,0.8609928323043077,0.7690289220916198
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,severity,severity_only,0.9008225108225107,0.752847136059904,0.8115414094102619,0.6832920584870296
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,demo,demo_only,0.7956505925768221,0.5886618972829251,0.7280235611383152,0.587944832944833
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_all_cdr,minus_all_cdr,0.9214935064935064,0.7985107975970853,0.8456568022141792,0.752071481576098
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_cdr_faq,minus_cdr_faq,0.9044996806472216,0.7735938956852328,0.8020921155347386,0.6951462349958589
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_cdr_moca,minus_cdr_moca,0.9113306365765382,0.7866258526532575,0.8356042864239586,0.734882041705571
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_faq_moca,minus_faq_moca,0.9214516357958982,0.8131964691266177,0.8466386345894543,0.7461768707482992
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_moca,minus_moca,0.9215843446171316,0.8025449700849597,0.8513402171598893,0.7527759049461176
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_faq,minus_faq,0.9286207508338656,0.8029354549171746,0.8642988432332694,0.7747800372385091
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_cdr_global,minus_cdr_global,0.9265296998083884,0.8026011632989956,0.8566035057838336,0.76838543307546
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_cdr_sumboxes,minus_cdr_sumboxes,0.9295695834220424,0.7971350656307805,0.8743854233198496,0.7851136570285506
+nacc_strict_at_main,NACC strict A/T main,strict_AT_binary,strict A+/T+ vs A-/T-,False,minus_fullstrip,minus_cdr_faq_moca,0.87006919310198,0.7341638731822938,0.743956780923994,0.6121730121730121
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,ref,reference_combined,0.9227864372469636,0.8366053445208121,0.8402159244264507,0.7668254885102599
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,severity,severity_only,,,,
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,demo,demo_only,,,,
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_all_cdr,minus_all_cdr,0.9155118083670716,0.823018479575962,0.8448819163292847,0.7790051498406454
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_cdr_faq,minus_cdr_faq,0.9001386639676113,0.8064220015518032,0.781002024291498,0.7026178626178627
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_cdr_moca,minus_cdr_moca,0.9008940620782726,0.8080677821261159,0.7992914979757085,0.7232684931067135
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_faq_moca,minus_faq_moca,0.9146379892037788,0.8367947176311897,0.8404082321187584,0.7705342898871715
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_moca,minus_moca,0.9169784075573548,0.8369880958488849,0.8273819163292847,0.7552518978605935
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_faq,minus_faq,0.9213076923076924,0.8465293199407287,0.8349460188933872,0.7656765220595008
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_cdr_global,minus_cdr_global,0.9204841430499324,0.8368975688743776,0.8499527665317139,0.7827164036346246
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_cdr_sumboxes,minus_cdr_sumboxes,0.9196612685560056,0.828523044660044,0.8377091767881242,0.7684944394594446
+nacc_strict_at_tracer6,NACC strict A/T tracer-6,strict_AT_binary,strict A+/T+ vs A-/T- (tracer-6 subset),True,minus_fullstrip,minus_cdr_faq_moca,0.8525823211875844,0.761168857067082,0.7325843454790824,0.6436545576395201

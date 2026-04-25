@@ -1,0 +1,56 @@
+# configs/training/multivit_fusion_fdg.yaml
+model:
+  name: multivit_fusion
+  num_classes: 3
+  embed_dim: 192
+  num_heads: 6
+  encoder_depth: 2
+  fusion_depth: 2
+  mlp_ratio: 4.0
+  dropout: 0.05
+  base_filters: 32
+
+training:
+  batch_size: 4
+  epochs: 150
+  num_workers: 8
+  persistent_workers: true
+  prefetch_factor: 2
+  pin_memory: true
+
+  optimizer:
+    name: adamw
+    lr: 1e-4
+    weight_decay: 0.01
+    patience: 15
+
+  scheduler:
+    name: CosineAnnealingLR
+    t_max: 150
+    lr_min: 1e-6
+
+data:
+  mode: fusion
+  mri_col: mri_preproc
+  pet_col: pet_preproc
+  group_col: subject_id
+  trainval_csv: "/project/aereditato/abhat/adni-mri-classification/data/preprocessing_dicom_spm_2/pipeline_v2/trainval_fdg.csv"
+  test_csv: "/project/aereditato/abhat/adni-mri-classification/data/preprocessing_dicom_spm_2/pipeline_v2/test_fdg.csv"
+
+  augmentation:
+    random_flip:
+      p: 0.5
+    random_affine:
+      p: 0.3
+      degrees: 5
+      translation: 5
+    random_noise:
+      p: 0.2
+      std: 0.02
+
+  oversample: false
+
+cross_validation:
+  method: kfold
+  folds: 5
+  seed: 42

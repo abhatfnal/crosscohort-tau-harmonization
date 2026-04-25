@@ -1,0 +1,58 @@
+# Conservative settings to prevent transformer collapse
+
+model:
+  name: multivit_fusion_lite
+  num_classes: 3
+  embed_dim: 128
+  num_heads: 4
+  encoder_depth: 1
+  fusion_depth: 1
+  mlp_ratio: 2.0
+  dropout: 0.10          # slightly less dropout
+  base_filters: 24
+
+training:
+  batch_size: 8
+  epochs: 100
+  num_workers: 8
+  persistent_workers: true
+  prefetch_factor: 2
+  pin_memory: true
+
+  optimizer:
+    name: adamw
+    lr: 1e-4             # baseline-like
+    weight_decay: 0.01   # MUCH less aggressive
+    patience: 20
+
+  scheduler:
+    name: OneCycleLR      # has warmup built-in in your train.py
+    lr_max: 3e-4          # peak LR
+    lr_min: 1e-6          # ignored by OneCycle in your code, safe to keep
+    t_max: 100            # ignored by OneCycle, safe to keep
+
+data:
+  mode: fusion
+  mri_col: mri_preproc
+  pet_col: pet_preproc
+  group_col: subject_id
+  trainval_csv: "/project/aereditato/abhat/adni-mri-classification/data/preprocessing_dicom_spm_2/pipeline_v2/trainval_fdg.csv"
+  test_csv: "/project/aereditato/abhat/adni-mri-classification/data/preprocessing_dicom_spm_2/pipeline_v2/test_fdg.csv"
+
+  augmentation:
+    random_flip:
+      p: 0.5
+    random_affine:
+      p: 0.3
+      degrees: 5
+      translation: 5
+    random_noise:
+      p: 0.2
+      std: 0.02
+
+  oversample: false
+
+cross_validation:
+  method: kfold
+  folds: 5
+  seed: 42

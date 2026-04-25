@@ -1,0 +1,5 @@
+cohort_key,cohort_label,n_full,n_pos_full,pos_rate_full_pct,n_cdrsb0,n_pos_cdrsb0,n_neg_cdrsb0,pos_rate_cdrsb0_pct
+adni_tau90,ADNI tau90,438,78,17.8,215,5,210,2.3
+adni_tau180,ADNI tau180,547,84,15.4,282,5,277,1.8
+oasis3_tau180,OASIS3 tau180,368,45,12.2,311,15,296,4.8
+oasis3_tau90,OASIS3 tau90,142,12,8.5,126,4,122,3.2
