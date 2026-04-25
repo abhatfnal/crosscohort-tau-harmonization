@@ -19,6 +19,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 RANDOM_STATE = 42
 N_SPLITS = 5
+PRIMARY_MODEL = "logreg_balanced"  # locked for all primary analyses; RF/ET go to robustness
 
 # Primary paper cohorts
 DATASETS = {
@@ -50,6 +51,7 @@ BEST_MODELS_CSV = MATCHED_RERUN_DIR / "best_model_per_experiment.csv"
 FEATURES = {
     "reference_combined": {
         "num": [
+            "age_h",
             "apoe_e4_carrier_h",
             "apoe_e4_count_h",
             "education_years_h",
@@ -64,6 +66,7 @@ FEATURES = {
     },
     "demo_only": {
         "num": [
+            "age_h",
             "apoe_e4_carrier_h",
             "apoe_e4_count_h",
             "education_years_h",
@@ -72,6 +75,7 @@ FEATURES = {
     },
     "minus_all_cdr": {
         "num": [
+            "age_h",
             "apoe_e4_carrier_h",
             "apoe_e4_count_h",
             "education_years_h",
@@ -310,18 +314,31 @@ def summarize_cohort(
     if missing:
         raise RuntimeError(f"{cohort_key}: missing best-model rows for {missing}")
 
-    best_model_map = {
+    # Primary analysis always uses logreg_balanced regardless of which model
+    # had highest CV AUC in the matched rerun.  RF/ET are retained in
+    # robustness_model_map for supplementary reporting only.
+    primary_model_map = {exp: PRIMARY_MODEL for exp in EXPERIMENTS}
+    robustness_model_map = {
         exp: cohort_best.loc[exp, "model"]
         for exp in EXPERIMENTS
     }
+
+    # Compute point AUC from the primary model on the full dataset so the
+    # point estimate is consistent with the bootstrap model, not the CSV's
+    # best-model AUC (which may come from a different model family).
+    print(f"Computing primary-model ({PRIMARY_MODEL}) point AUCs on full data...")
     point_auc_map = {
-        exp: float(cohort_best.loc[exp, "roc_auc_mean"])
+        exp: mean_cv_auc(df, exp, PRIMARY_MODEL)
         for exp in EXPERIMENTS
     }
+    for exp, auc in point_auc_map.items():
+        rob = float(cohort_best.loc[exp, "roc_auc_mean"])
+        rob_model = robustness_model_map[exp]
+        print(f"  {exp}: logreg={auc:.4f}  best-model={rob:.4f} ({rob_model})")
 
     seeds = [seed + i for i in range(n_bootstrap)]
     reps = Parallel(n_jobs=n_jobs, verbose=5)(
-        delayed(one_bootstrap_replicate)(df, best_model_map, s)
+        delayed(one_bootstrap_replicate)(df, primary_model_map, s)
         for s in seeds
     )
     reps_df = pd.DataFrame(reps)
@@ -337,7 +354,8 @@ def summarize_cohort(
                 "cohort_key": cohort_key,
                 "cohort_label": cohort_label,
                 "experiment": exp,
-                "model": best_model_map[exp],
+                "model": PRIMARY_MODEL,
+                "robustness_best_model": robustness_model_map[exp],
                 "n_subjects": int(df["subject_id"].nunique()),
                 "n_pos": int(df["y_target"].sum()),
                 "n_neg": int((1 - df["y_target"]).sum()),
@@ -381,7 +399,7 @@ def summarize_cohort(
             }
         )
 
-    return pd.DataFrame(summary_rows), pd.DataFrame(diff_rows), best_model_map
+    return pd.DataFrame(summary_rows), pd.DataFrame(diff_rows), robustness_model_map
 
 
 def main():
@@ -414,8 +432,9 @@ def main():
         "n_bootstrap": args.n_bootstrap,
         "n_splits": N_SPLITS,
         "seed": args.seed,
+        "primary_model": PRIMARY_MODEL,
         "features": FEATURES,
-        "best_models_csv": str(BEST_MODELS_CSV),
+        "robustness_models_csv": str(BEST_MODELS_CSV),
     }
 
     for cohort_key in args.cohorts:

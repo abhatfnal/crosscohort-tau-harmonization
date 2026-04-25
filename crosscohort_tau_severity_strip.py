@@ -67,6 +67,12 @@ def to_num(s):
     return pd.to_numeric(s, errors="coerce")
 
 
+def compute_age_years(visit_date: pd.Series, dob: pd.Series) -> pd.Series:
+    visit_dt = pd.to_datetime(visit_date, errors="coerce")
+    dob_dt = pd.to_datetime(dob, errors="coerce")
+    return (visit_dt - dob_dt).dt.days / 365.25
+
+
 
 
 def coerce_binary_target(s):
@@ -341,6 +347,14 @@ def add_shared_features(df):
 def build_adni_subject_table(src):
     labels = read_csv_any(src)
     master = read_csv_any(ADNI_MASTER)
+
+    # Recover chronological age from date-of-birth + visit date so age_h is
+    # populated during harmonization.  The master stores DOB and visit date but
+    # no pre-computed age column; DEM_AGE is in the add_shared_features alias
+    # list so once injected it will be picked up automatically.
+    if {"DEM_VISDATE", "DEM_PTDOB"}.issubset(master.columns) and "DEM_AGE" not in master.columns:
+        master["DEM_AGE"] = compute_age_years(master["DEM_VISDATE"], master["DEM_PTDOB"])
+
     print("\nADNI master likely feature columns:")
     cand = [c for c in master.columns if any(k in c.upper() for k in [
         "AGE", "SEX", "GENDER", "EDUC", "APOE", "CDR", "FAQ", "MOCA"
@@ -386,6 +400,14 @@ def build_adni_subject_table(src):
     # Harmonize BOTH label-side cohort file and master
     labels, feat_meta_labels = add_shared_features(labels)
     master, feat_meta_master = add_shared_features(master)
+
+    # The ADNI cohort source file is a scan-matched table, not a demographics
+    # table.  Its imaging-UID columns (e.g. FS7_IMAGEUID_INT) can be mistakenly
+    # matched as an age column via substring search ("AGE" inside "IMAGE").
+    # Always take age from the master, which has verified DOB-derived DEM_AGE.
+    if "age_h" in labels.columns:
+        labels = labels.drop(columns=["age_h"])
+        feat_meta_labels["source_columns"]["age_h"] = None
 
     shared_cols = [
         "age_h", "sex_h", "education_years_h", "apoe_e4_count_h",

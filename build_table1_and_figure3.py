@@ -11,16 +11,6 @@ import matplotlib.pyplot as plt
 # ---------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------
-DEFAULT_PRE_HARMONIZATION_TABLE = (
-    "/project/aereditato/abhat/adni-mri-classification/"
-    "crosscohort_severity_summary/crosscohort_primary_core_table.csv"
-)
-
-DEFAULT_POST_HARMONIZATION_TABLE = (
-    "/project/aereditato/abhat/adni-mri-classification/"
-    "crosscohort_publication_tables/crosscohort_primary_table.csv"
-)
-
 DEFAULT_OUTDIR = (
     "/project/aereditato/abhat/adni-mri-classification/"
     "paper_tables_and_figures"
@@ -154,15 +144,9 @@ def summarize_subject_table(
     cdrsb_col = pick_col(df, ["cdr_sumboxes_h", "cdr_sumboxes", "cdrsb", "CDRSUM"])
     faq_col = pick_col(df, ["faq_total_h", "faq_total", "FAQTOTAL", "FAQ"])
 
-    # Age cleanup:
-    # ADNI subject-level tables may still contain a previously mis-recovered age_h.
-    # For Table 1, force ADNI age to missing until a valid chronological age source is recovered.
     if age_col is not None:
         age_series = to_num(df[age_col])
     else:
-        age_series = pd.Series(np.nan, index=df.index, dtype="float")
-
-    if cohort_key.startswith("adni_"):
         age_series = pd.Series(np.nan, index=df.index, dtype="float")
 
     n = int(df[sid_col].nunique()) if sid_col is not None else int(len(df))
@@ -316,97 +300,121 @@ def build_table1(outdir: Path, nacc_subject_csv: str | None):
     return raw_df, primary_df, supp_df
 
 
-def build_before_after_values(pre_csv: str, post_csv: str):
-    pre = pd.read_csv(pre_csv)
-    post = pd.read_csv(post_csv)
-
-    needed = ["adni_tau180", "oasis3_tau180"]
-
-    pre = pre[pre["cohort_key"].isin(needed)].copy()
-    post = post[post["cohort_key"].isin(needed)].copy()
-
-    pre = pre.set_index("cohort_key")
-    post = post.set_index("cohort_key")
-
-    rows = []
-    for key in needed:
-        rows.append(
-            {
-                "cohort_key": key,
-                "cohort_label": pre.loc[key, "cohort_label"] if key in pre.index else post.loc[key, "cohort_label"],
-                "auc_demo_before": float(pre.loc[key, "auc_demo"]),
-                "auc_demo_after": float(post.loc[key, "auc_demo"]),
-            }
-        )
-
-    df = pd.DataFrame(rows)
-    df["gap_before"] = abs(df.loc[df["cohort_key"] == "adni_tau180", "auc_demo_before"].iloc[0]
-                           - df.loc[df["cohort_key"] == "oasis3_tau180", "auc_demo_before"].iloc[0])
-    df["gap_after"] = abs(df.loc[df["cohort_key"] == "adni_tau180", "auc_demo_after"].iloc[0]
-                          - df.loc[df["cohort_key"] == "oasis3_tau180", "auc_demo_after"].iloc[0])
+def build_cdrsb0_figure_data(raw_df: pd.DataFrame) -> pd.DataFrame:
+    """Extract CDR-SB=0 prevalence rows in display order for Figure 3."""
+    order = ["adni_tau90", "adni_tau180", "oasis3_tau180", "oasis3_tau90"]
+    df = raw_df[raw_df["cohort_key"].isin(order)].copy()
+    df["_sort"] = df["cohort_key"].map({k: i for i, k in enumerate(order)})
+    df = df.sort_values("_sort").drop(columns=["_sort"]).reset_index(drop=True)
     return df
 
 
-def plot_figure3(before_after_df: pd.DataFrame, outdir: Path):
-    labels = ["ADNI tau180", "OASIS3 tau180"]
-    before_vals = [
-        float(before_after_df.loc[before_after_df["cohort_key"] == "adni_tau180", "auc_demo_before"].iloc[0]),
-        float(before_after_df.loc[before_after_df["cohort_key"] == "oasis3_tau180", "auc_demo_before"].iloc[0]),
-    ]
-    after_vals = [
-        float(before_after_df.loc[before_after_df["cohort_key"] == "adni_tau180", "auc_demo_after"].iloc[0]),
-        float(before_after_df.loc[before_after_df["cohort_key"] == "oasis3_tau180", "auc_demo_after"].iloc[0]),
-    ]
+def plot_figure3(cdrsb0_df: pd.DataFrame, outdir: Path):
+    """Publication-quality bar chart of CDR-SB=0 prevalence across cohorts."""
+    from matplotlib.patches import Patch
 
-    gap_before = abs(before_vals[0] - before_vals[1])
-    gap_after = abs(after_vals[0] - after_vals[1])
+    # Colorblind-safe palette (blue for ADNI, teal for OASIS3)
+    ADNI_COLOR  = "#2166AC"
+    OASIS_COLOR = "#4DAC26"
+    BAR_EDGE    = "#FFFFFF"
+    GRID_COLOR  = "#CCCCCC"
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.8), sharey=True)
+    labels      = cdrsb0_df["cohort_label"].tolist()
+    pcts        = cdrsb0_df["cdrsb0_pct"].tolist()
+    ns          = cdrsb0_df["cdrsb0_n"].tolist()
+    totals      = cdrsb0_df["N"].tolist()
+    cohort_keys = cdrsb0_df["cohort_key"].tolist()
+    colors      = [ADNI_COLOR if k.startswith("adni") else OASIS_COLOR for k in cohort_keys]
 
-    x = np.arange(len(labels))
+    fig, ax = plt.subplots(figsize=(7.5, 5.0))
+    fig.patch.set_facecolor("white")
+    ax.set_facecolor("white")
 
-    for ax, vals, title, gap in zip(
-        axes,
-        [before_vals, after_vals],
-        ["Before harmonization", "After harmonization"],
-        [gap_before, gap_after],
-    ):
-        bars = ax.bar(x, vals)
-        ax.set_xticks(x)
-        ax.set_xticklabels(labels)
-        ax.set_ylim(0.45, 0.90)
-        ax.set_ylabel("Demo-only AUC")
-        ax.set_title(title)
-        ax.grid(axis="y", alpha=0.3)
+    x    = np.arange(len(labels))
+    bars = ax.bar(
+        x, pcts,
+        color=colors,
+        edgecolor=BAR_EDGE,
+        linewidth=1.2,
+        width=0.55,
+        zorder=3,
+    )
 
-        for i, b in enumerate(bars):
-            y = b.get_height()
-            ax.text(
-                b.get_x() + b.get_width() / 2.0,
-                y + 0.01,
-                f"{vals[i]:.3f}",
-                ha="center",
-                va="bottom",
-                fontsize=10,
-            )
-
-        # gap annotation
-        y_gap = max(vals) + 0.06
-        ax.plot([x[0], x[0], x[1], x[1]], [y_gap - 0.005, y_gap, y_gap, y_gap - 0.005], lw=1.2)
+    # Percentage label above each bar
+    for bar, pct in zip(bars, pcts):
+        y_pos = pct + 1.2
         ax.text(
-            np.mean(x),
-            y_gap + 0.005,
-            f"Gap = {gap:.3f}",
+            bar.get_x() + bar.get_width() / 2.0,
+            y_pos,
+            f"{pct:.1f}%",
             ha="center",
             va="bottom",
-            fontsize=10,
+            fontsize=12,
+            fontweight="bold",
+            color="#222222",
         )
 
-    fig.suptitle("Effect of feature harmonization on cross-cohort demo-only prediction", fontsize=18)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    # N annotation inside each bar
+    for bar, n, total in zip(bars, ns, totals):
+        inner_y = max(bar.get_height() / 2.0, 4.5)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            inner_y,
+            f"n={n}\n/{total}",
+            ha="center",
+            va="center",
+            fontsize=8.5,
+            color="white",
+            fontweight="bold",
+            linespacing=1.3,
+        )
 
-    png = outdir / "figure3_before_after_harmonization.png"
-    pdf = outdir / "figure3_before_after_harmonization.pdf"
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=12)
+    ax.set_xlim(-0.6, len(labels) - 0.4)
+    ax.set_ylim(0, 110)
+    ax.set_ylabel("Subjects with CDR-SB = 0 (%)", fontsize=12)
+
+    ax.yaxis.grid(True, color=GRID_COLOR, linestyle="--", linewidth=0.8, zorder=0)
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.spines["bottom"].set_color("#AAAAAA")
+    ax.tick_params(axis="y", labelsize=11, left=False)
+    ax.tick_params(axis="x", bottom=False)
+
+    legend_handles = [
+        Patch(facecolor=ADNI_COLOR,  label="ADNI",   edgecolor="white"),
+        Patch(facecolor=OASIS_COLOR, label="OASIS3", edgecolor="white"),
+    ]
+    ax.legend(
+        handles=legend_handles,
+        fontsize=11,
+        frameon=True,
+        framealpha=0.9,
+        edgecolor="#CCCCCC",
+        loc="upper right",
+    )
+
+    ax.set_title(
+        "CDR-SB = 0 prevalence by cohort",
+        fontsize=13,
+        fontweight="bold",
+        pad=10,
+        loc="left",
+    )
+    ax.text(
+        0, 1.01,
+        "Functionally intact subjects as proxy for preclinical / early-stage enrichment",
+        transform=ax.transAxes,
+        fontsize=9,
+        color="#555555",
+        va="bottom",
+    )
+
+    fig.tight_layout()
+
+    png = outdir / "figure3_cdrsb0_prevalence.png"
+    pdf = outdir / "figure3_cdrsb0_prevalence.pdf"
     fig.savefig(png, dpi=300, bbox_inches="tight")
     fig.savefig(pdf, bbox_inches="tight")
     plt.close(fig)
@@ -416,16 +424,6 @@ def plot_figure3(before_after_df: pd.DataFrame, outdir: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--pre-harmonization-table",
-        default=DEFAULT_PRE_HARMONIZATION_TABLE,
-        help="Existing pre-matched summary table (expected to contain auc_demo).",
-    )
-    parser.add_argument(
-        "--post-harmonization-table",
-        default=DEFAULT_POST_HARMONIZATION_TABLE,
-        help="Current matched-feature primary table (expected to contain auc_demo).",
-    )
     parser.add_argument(
         "--nacc-subject-csv",
         default=None,
@@ -446,17 +444,14 @@ def main():
         nacc_subject_csv=args.nacc_subject_csv,
     )
 
-    # Figure 3 values + plot
-    before_after_df = build_before_after_values(
-        pre_csv=args.pre_harmonization_table,
-        post_csv=args.post_harmonization_table,
-    )
-    before_after_df.to_csv(outdir / "figure3_before_after_values.csv", index=False)
+    # Figure 3: CDR-SB=0 prevalence across cohorts
+    cdrsb0_df = build_cdrsb0_figure_data(raw_df)
+    cdrsb0_df.to_csv(outdir / "figure3_cdrsb0_prevalence_data.csv", index=False)
 
-    png, pdf = plot_figure3(before_after_df, outdir)
+    png, pdf = plot_figure3(cdrsb0_df, outdir)
 
-    print("\nFigure 3 values")
-    print(before_after_df.to_string(index=False))
+    print("\nFigure 3 — CDR-SB=0 prevalence")
+    print(cdrsb0_df[["cohort_label", "N", "cdrsb0_n", "cdrsb0_pct"]].to_string(index=False))
 
     print("\nSaved:")
     print(" ", outdir / "table1_demographics_raw.csv")
@@ -465,7 +460,7 @@ def main():
     print(" ", outdir / "table1_demographics_supplementary.csv")
     print(" ", outdir / "table1_demographics_primary.tex")
     print(" ", outdir / "table1_demographics_supplementary.tex")
-    print(" ", outdir / "figure3_before_after_values.csv")
+    print(" ", outdir / "figure3_cdrsb0_prevalence_data.csv")
     print(" ", png)
     print(" ", pdf)
 
