@@ -8,10 +8,10 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-DEFAULT_SUMMARY = (
-    "/project/aereditato/abhat/adni-mri-classification/"
-    "crosscohort_bootstrap_ci/bootstrap_auc_summary.csv"
-)
+ROOT = Path(__file__).resolve().parent
+DEFAULT_SUMMARY = ROOT / "crosscohort_bootstrap_ci" / "bootstrap_auc_summary.csv"
+DEFAULT_OUTDIR = ROOT / "crosscohort_bootstrap_ci" / "figures"
+PRIMARY_MODEL = "logreg_balanced"
 
 
 EXPERIMENT_ORDER = [
@@ -39,6 +39,14 @@ COHORT_LABELS = {
     "oasis3_tau90": "OASIS3 tau90",
 }
 
+# Colour-blind-safe categorical trio (validated: worst all-pairs CVD dE 9.2);
+# marker shape repeats the experiment identity for greyscale print.
+EXPERIMENT_COLORS = {
+    "reference_combined": "#2a78d6",
+    "severity_only": "#eb6834",
+    "demo_only": "#1baf7a",
+}
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -49,13 +57,11 @@ def main():
         default=COHORT_ORDER_PRIMARY,
         choices=list(COHORT_LABELS.keys()),
     )
-    parser.add_argument(
-        "--outdir",
-        default="/project/aereditato/abhat/adni-mri-classification/crosscohort_bootstrap_ci/figures",
-    )
+    parser.add_argument("--outdir", default=DEFAULT_OUTDIR)
     parser.add_argument(
         "--title",
-        default="Cross-cohort decomposition of tau-positivity prediction by feature domain",
+        default="",
+        help="Optional in-figure title; the manuscript caption carries the title.",
     )
     args = parser.parse_args()
 
@@ -65,6 +71,13 @@ def main():
     df = pd.read_csv(args.summary_csv)
     df = df[df["experiment"].isin(EXPERIMENT_ORDER)].copy()
     df = df[df["cohort_key"].isin(args.cohorts)].copy()
+
+    # Points and intervals must come from one bootstrap run of the primary model,
+    # so the figure cannot drift from Table 3 or the CIs quoted in the text.
+    if not df["model"].eq(PRIMARY_MODEL).all():
+        raise ValueError(f"{args.summary_csv} contains non-{PRIMARY_MODEL} rows")
+    if df["n_bootstrap"].nunique() != 1:
+        raise ValueError(f"{args.summary_csv} mixes bootstrap runs: {df['n_bootstrap'].unique()}")
 
     # enforce order
     df["cohort_key"] = pd.Categorical(df["cohort_key"], categories=args.cohorts, ordered=True)
@@ -89,7 +102,9 @@ def main():
         sub = df[df["experiment"] == exp].copy()
         y = np.array([base_y[args.cohorts.index(k)] + offsets[exp] for k in sub["cohort_key"]])
 
-        x = sub["auc_boot_mean"].to_numpy()
+        # Point = five-fold CV AUC on the full cohort (the Table 3 value);
+        # bar = 95% percentile interval from the bootstrap replicates.
+        x = sub["auc_point"].to_numpy()
         xlo = sub["auc_ci_low"].to_numpy()
         xhi = sub["auc_ci_high"].to_numpy()
 
@@ -102,20 +117,25 @@ def main():
             y,
             xerr=xerr,
             fmt=markers[exp],
+            color=EXPERIMENT_COLORS[exp],
             capsize=3,
             linewidth=1.3,
             markersize=6.5,
+            markeredgecolor="white",
+            markeredgewidth=0.8,
             label=EXPERIMENT_LABELS[exp],
         )
 
     ax.set_yticks(base_y)
     ax.set_yticklabels([COHORT_LABELS[k] for k in args.cohorts])
 
-    ax.set_xlabel("Mean AUC with 95% bootstrap CI")
-    ax.set_title(args.title)
+    ax.set_xlabel("Five-fold cross-validated AUC (bars: 95% bootstrap CI)")
+    if args.title:
+        ax.set_title(args.title)
 
     ax.set_xlim(0.6, 1.00)
-    ax.grid(axis="x", alpha=0.3)
+    ax.grid(axis="x", color="#e1e0d9", linewidth=0.8)
+    ax.set_axisbelow(True)
     ax.legend(frameon=False, loc="best")
 
     plt.tight_layout()

@@ -2,8 +2,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/crosscohort_severity_summary")
+OUTDIR = Path(__file__).resolve().parent / "crosscohort_severity_summary"
 OUTDIR.mkdir(parents=True, exist_ok=True)
+
+# Every row reports the prespecified primary classifier. Best-of-family selection
+# (RF/ET where they happened to score higher) is not used for any table.
+PRIMARY_MODEL = "logreg_balanced"
 
 # -----------------------------------------------------------------------------
 # Paths
@@ -17,7 +21,7 @@ STANDARD_COHORTS = [
         "window": "90d",
         "endpoint_family": "tau_binary",
         "endpoint_label": "tau positivity",
-        "best_csv": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau90/best_model_per_experiment.csv",
+        "metrics_csv": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau90/all_severity_strip_metrics.csv",
         "subject_csv": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau90/subject_level_input_table.csv",
         "subject_col": "subject_id",
         "target_col": "y_target",
@@ -33,7 +37,7 @@ STANDARD_COHORTS = [
         "window": "180d",
         "endpoint_family": "tau_binary",
         "endpoint_label": "tau positivity",
-        "best_csv": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau180/best_model_per_experiment.csv",
+        "metrics_csv": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau180/all_severity_strip_metrics.csv",
         "subject_csv": "/project/aereditato/abhat/ADNI/ARC_06Mar2026/output/severity_strip_tau180/subject_level_input_table.csv",
         "subject_col": "subject_id",
         "target_col": "y_target",
@@ -49,7 +53,7 @@ STANDARD_COHORTS = [
         "window": "90d",
         "endpoint_family": "tau_binary",
         "endpoint_label": "tau positivity (derived)",
-        "best_csv": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/best_model_per_experiment.csv",
+        "metrics_csv": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/all_severity_strip_metrics.csv",
         "subject_csv": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau90/subject_level_input_table.csv",
         "subject_col": "subject_id",
         "target_col": "y_target",
@@ -65,7 +69,7 @@ STANDARD_COHORTS = [
         "window": "180d",
         "endpoint_family": "tau_binary",
         "endpoint_label": "tau positivity (derived)",
-        "best_csv": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/best_model_per_experiment.csv",
+        "metrics_csv": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/all_severity_strip_metrics.csv",
         "subject_csv": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv",
         "subject_col": "subject_id",
         "target_col": "y_target",
@@ -76,8 +80,8 @@ STANDARD_COHORTS = [
     },
 ]
 
-NACC_ABLATION_BEST = "/project/aereditato/abhat/NACC_17259/phase2_tau_amyloid_90d/model_ready_v3_from_master/ablation_v1/best_model_per_experiment.csv"
-NACC_STRIP_BEST = "/project/aereditato/abhat/NACC_17259/phase2_tau_amyloid_90d/model_ready_v3_from_master/ablation_severity_strip/best_model_per_experiment.csv"
+NACC_ABLATION_METRICS = "/project/aereditato/abhat/NACC_17259/phase2_tau_amyloid_90d/model_ready_v3_from_master/ablation_v1/all_ablation_metrics.csv"
+NACC_STRIP_METRICS = "/project/aereditato/abhat/NACC_17259/phase2_tau_amyloid_90d/model_ready_v3_from_master/ablation_severity_strip/all_severity_strip_metrics.csv"
 
 NACC_MAIN_MODEL = "/project/aereditato/abhat/NACC_17259/phase2_tau_amyloid_90d/model_ready_v3_from_master/nacc_AT_strict_model_table_nodx_withtracer_v3.csv"
 NACC_TR6_MODEL = "/project/aereditato/abhat/NACC_17259/phase2_tau_amyloid_90d/model_ready_v3_from_master/nacc_AT_strict_tracer6_model_table_nodx_v3.csv"
@@ -111,6 +115,15 @@ EXPERIMENT_ALIAS_MAP = {
 
 def read_csv_any(path):
     return pd.read_csv(path, low_memory=False, compression="infer")
+
+
+def read_primary_metrics(path):
+    """All-model metrics file restricted to the primary classifier."""
+    df = read_csv_any(path)
+    df = df[df["model"] == PRIMARY_MODEL].copy()
+    if df.empty:
+        raise RuntimeError(f"No {PRIMARY_MODEL} rows in {path}")
+    return df
 
 
 def safe_get(df, experiment, metric_col):
@@ -183,7 +196,7 @@ def add_derived_fields(row):
 
 
 def build_standard_row(cfg):
-    best = read_csv_any(cfg["best_csv"])
+    best = read_primary_metrics(cfg["metrics_csv"])
     subj_df, n_subjects, n_pos, n_neg, n_missing, pos_rate = load_target_info(
         cfg["subject_csv"], cfg["subject_col"], cfg["target_col"]
     )
@@ -215,8 +228,8 @@ def build_standard_row(cfg):
 
 
 def build_nacc_main_row():
-    ab1 = read_csv_any(NACC_ABLATION_BEST)
-    strip_best = read_csv_any(NACC_STRIP_BEST)
+    ab1 = read_primary_metrics(NACC_ABLATION_METRICS)
+    strip_best = read_primary_metrics(NACC_STRIP_METRICS)
     subj_df, n_subjects, n_pos, n_neg, n_missing, pos_rate = load_target_info(
         NACC_MAIN_MODEL, "NACCID", "y_AT_strict"
     )
@@ -242,7 +255,7 @@ def build_nacc_main_row():
         "available_severity_features": "|".join(sev_avail),
         "n_demo_features_available": len(demo_avail),
         "n_severity_features_available": len(sev_avail),
-        "note": "Different endpoint family from ADNI/OASIS. Reference and demo rows include tau_tracer in current NACC main outputs.",
+        "note": "Different endpoint family from ADNI/OASIS. Reference and demo rows also include tau tracer, race, Hispanic ethnicity and handedness; severity rows include animal and vegetable category fluency.",
     }
 
     # reference / demo / severity from ablation_v1
@@ -255,7 +268,7 @@ def build_nacc_main_row():
         for short_name, metric_col in METRIC_MAP.items():
             row[f"{short_name}_{alias}"] = safe_get(ab1, exp, metric_col)
 
-    # strip experiments from severity-strip best file, dataset-filtered
+    # strip experiments from severity-strip metrics (primary model), dataset-filtered
     sb = strip_best[strip_best["dataset"] == "strict_main_withtracer"].copy()
     strip_aliases = {
         "minus_all_cdr": "minus_all_cdr",
@@ -274,8 +287,8 @@ def build_nacc_main_row():
 
 
 def build_nacc_tracer6_row():
-    ab1 = read_csv_any(NACC_ABLATION_BEST)
-    strip_best = read_csv_any(NACC_STRIP_BEST)
+    ab1 = read_primary_metrics(NACC_ABLATION_METRICS)
+    strip_best = read_primary_metrics(NACC_STRIP_METRICS)
     subj_df, n_subjects, n_pos, n_neg, n_missing, pos_rate = load_target_info(
         NACC_TR6_MODEL, "NACCID", "y_AT_strict"
     )
@@ -313,7 +326,7 @@ def build_nacc_tracer6_row():
         row[f"{short_name}_demo"] = np.nan
         row[f"{short_name}_severity"] = np.nan
 
-    # strip experiments from severity-strip best file, dataset-filtered
+    # strip experiments from severity-strip metrics (primary model), dataset-filtered
     sb = strip_best[strip_best["dataset"] == "strict_tracer6_notracer"].copy()
     strip_aliases = {
         "minus_all_cdr": "minus_all_cdr",

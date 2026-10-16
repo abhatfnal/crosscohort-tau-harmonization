@@ -117,7 +117,9 @@ def make_preproc(num_cols, cat_cols):
 
 def make_models():
     return {
-        "ridge": Ridge(alpha=1.0, solver="lsqr"),
+        # Exact solver: iterative lsqr depends on the sklearn default tol (1e-3 before
+        # 1.2, 1e-4 after), which shifted tau90 minus-all-CDR R2 by 3e-4 between versions.
+        "ridge": Ridge(alpha=1.0, solver="cholesky"),
         "random_forest": RandomForestRegressor(
             n_estimators=500,
             min_samples_leaf=5,
@@ -273,7 +275,7 @@ def plot_primary(metrics_df):
         ax.bar(labels, vals, color=colors, edgecolor="white", linewidth=0.8)
         ax.axhline(0, color="#333333", linewidth=0.8)
         ax.set_title(cohort_cfg["cohort_label"], fontsize=12)
-        ax.set_ylabel("Out-of-fold R2" if ax is axes[0] else "")
+        ax.set_ylabel(r"Out-of-fold R$^2$" if ax is axes[0] else "")
         ax.set_ylim(min(-0.25, min(vals) - 0.05), max(0.35, max(vals) + 0.05))
         ax.tick_params(axis="x", rotation=35)
         ax.grid(axis="y", linestyle="--", alpha=0.3)
@@ -283,7 +285,6 @@ def plot_primary(metrics_df):
             offset = 0.012 if val >= 0 else -0.012
             ax.text(idx, val + offset, f"{val:.3f}", ha="center", va=va, fontsize=8)
 
-    fig.suptitle("Within-OASIS3 continuous Tauopathy SUVR sensitivity", fontsize=13, fontweight="bold")
     fig.tight_layout()
     png = OUTDIR / "continuous_suvr_r2_by_feature_block.png"
     pdf = OUTDIR / "continuous_suvr_r2_by_feature_block.pdf"

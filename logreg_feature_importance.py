@@ -7,10 +7,15 @@ for each cohort × experiment and extracts standardized coefficients.
 Features are already scaled by StandardScaler in the pipeline, so
 coefficients are directly comparable within an experiment.
 
+Sex enters as two one-hot terms; their difference (female minus male) is the
+interpretable sex effect and is reported as an extra row. It is a log-odds
+contrast between categories, not a per-SD coefficient.
+
 Outputs:
   logreg_feature_importance/
-    feature_coefficients.csv   — long-form table
-    feature_coefficients.tex   — LaTeX supplementary table
+    feature_coefficients.csv                — long-form table
+    feature_coefficients.tex                — all cohorts × experiments
+    table_s6_reference_coefficients.tex     — manuscript Table S6
 """
 from pathlib import Path
 import warnings
@@ -24,7 +29,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 warnings.filterwarnings("ignore")
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/logreg_feature_importance")
+OUTDIR = Path(__file__).resolve().parent / "logreg_feature_importance"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 COHORTS = {
@@ -139,6 +144,19 @@ for cohort_key, cfg in COHORTS.items():
             })
             print(f"  {exp_name:22s}  {label:25s}  {coef:+.4f}")
 
+        coef_map = dict(zip(feat_names, coefs))
+        if {"sex_h_F", "sex_h_M"} <= coef_map.keys():
+            contrast = coef_map["sex_h_F"] - coef_map["sex_h_M"]
+            rows.append({
+                "cohort_key":   cohort_key,
+                "cohort_label": cfg["label"],
+                "experiment":   exp_name,
+                "feature":      "sex_h_F_minus_M",
+                "feature_label": "Sex (female vs. male)",
+                "coefficient":  round(float(contrast), 4),
+            })
+            print(f"  {exp_name:22s}  {'Sex (female vs. male)':25s}  {contrast:+.4f}")
+
 
 coef_df = pd.DataFrame(rows)
 coef_df.to_csv(OUTDIR / "feature_coefficients.csv", index=False)
@@ -203,3 +221,40 @@ tex = "\n".join(lines)
 with open(OUTDIR / "feature_coefficients.tex", "w") as f:
     f.write(tex)
 print(f"Saved: {OUTDIR / 'feature_coefficients.tex'}")
+
+
+# ── Manuscript Table S6: reference-combined model, primary cohorts ────────────
+S6_COHORTS  = ["adni_tau90", "adni_tau180", "oasis3_tau180"]
+S6_FEATURES = [
+    ("cdr_sumboxes_h",    "CDR-SB"),
+    ("age_h",             "Age"),
+    ("apoe_e4_carrier_h", r"APOE~$\varepsilon$4 carrier"),
+    ("apoe_e4_count_h",   r"APOE~$\varepsilon$4 count"),
+    ("education_years_h", "Education"),
+    ("sex_h_F_minus_M",   "Sex (female vs.\\ male)$^{a}$"),
+    ("faq_total_h",       "FAQ"),
+]
+ref = coef_df[coef_df["experiment"] == "reference_combined"]
+s6 = ref.pivot_table(index="feature", columns="cohort_key", values="coefficient", aggfunc="first")
+
+
+def fmt_coef(v):
+    return f"${v:.2f}$" if v < 0 else f"{v:.2f}"   # math mode for a true minus sign
+
+
+s6_lines = [
+    r"\begin{tabular}{lrrr}",
+    r"\toprule",
+    "Feature & " + " & ".join(COHORT_LABELS[c] for c in S6_COHORTS) + r" \\",
+    r"\midrule",
+]
+for feat, label in S6_FEATURES:
+    s6_lines.append(label + " & " + " & ".join(fmt_coef(s6.loc[feat, c]) for c in S6_COHORTS) + r" \\")
+s6_lines += [
+    r"\bottomrule",
+    r"\end{tabular}",
+    r"% a: difference of the female and male one-hot coefficients (log-odds, not per SD).",
+]
+with open(OUTDIR / "table_s6_reference_coefficients.tex", "w") as f:
+    f.write("\n".join(s6_lines) + "\n")
+print(f"Saved: {OUTDIR / 'table_s6_reference_coefficients.tex'}")

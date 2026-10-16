@@ -33,7 +33,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 warnings.filterwarnings("ignore")
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/dx_stratified_auc")
+OUTDIR = Path(__file__).resolve().parent / "dx_stratified_auc"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 COHORTS = {
@@ -73,7 +73,8 @@ EXPERIMENTS = {
 }
 
 DX_ORDER   = ["CN", "MCI", "Dementia"]
-MIN_POS    = 8    # below this, flag as unreliable
+MIN_POS    = 10   # strata with <10 tau-positive or <10 tau-negative subjects are not estimated
+PLOT_COHORTS = ["adni_tau90", "adni_tau180", "oasis3_tau180"]  # primary cohorts only
 N_SPLITS   = 5
 RANDOM_STATE = 42
 
@@ -207,60 +208,64 @@ for (cohort_label, dx), grp in results_df.groupby(["cohort_label", "dx_class"]):
 # ── Plot ───────────────────────────────────────────────────────────────────────
 COHORT_COLORS = {
     "adni_tau90":   "#2166AC",
-    "adni_tau180":  "#6BAED6",
+    "adni_tau180":  "#5AA0E0",
     "oasis3_tau180":"#4DAC26",
-    "oasis3_tau90": "#B8E186",
 }
-EXP_STYLES = {
-    "reference_combined": "-o",
-    "demo_only":          "--s",
+COHORT_MARKERS = {
+    "adni_tau90":   "o",
+    "adni_tau180":  "D",
+    "oasis3_tau180":"s",
 }
 EXP_LABELS = {
     "reference_combined": "Reference combined",
     "demo_only":          "Demo only",
 }
 DX_X = {dx: i for i, dx in enumerate(DX_ORDER)}
+NE_Y = 0.36                      # "not estimated" band, kept clear of the AUC scale
+NE_DX = {"adni_tau90": -0.06, "adni_tau180": 0.0, "oasis3_tau180": 0.06}
 
 fig, axes = plt.subplots(1, 2, figsize=(12, 5), sharey=True)
 fig.subplots_adjust(wspace=0.15)
 
 for ax, exp_name in zip(axes, ["reference_combined", "demo_only"]):
     sub = results_df[(results_df["experiment"] == exp_name)]
-    for cohort_key, cfg in COHORTS.items():
+    for cohort_key in PLOT_COHORTS:
         csub = sub[sub["cohort_key"] == cohort_key].copy()
         csub = csub[csub["dx_class"].isin(DX_ORDER)].copy()
         csub["dx_x"] = csub["dx_class"].map(DX_X)
         csub = csub.sort_values("dx_x")
 
-        reliable   = csub[csub["reliable"]]
+        # NaN for strata that were not estimated, so lines never bridge a gap
+        # and imply a value for the missing stratum.
+        y_plot = csub["auc"].where(csub["reliable"])
         unreliable = csub[~csub["reliable"]]
 
         color = COHORT_COLORS[cohort_key]
-        if not reliable.empty:
-            ax.plot(reliable["dx_x"], reliable["auc"],
-                    EXP_STYLES[exp_name], color=color, label=cfg["label"],
-                    markersize=7, linewidth=1.8)
+        ax.plot(csub["dx_x"], y_plot, "-", marker=COHORT_MARKERS[cohort_key],
+                color=color, label=COHORTS[cohort_key]["label"],
+                markersize=7, linewidth=1.8,
+                markeredgecolor="white", markeredgewidth=0.8)
         if not unreliable.empty:
-            ax.scatter(unreliable["dx_x"], [0.5] * len(unreliable),
-                       marker="x", color=color, s=50, zorder=3)
+            ax.scatter(unreliable["dx_x"] + NE_DX[cohort_key], [NE_Y] * len(unreliable),
+                       marker="x", color=color, s=45, linewidths=1.6, zorder=3)
 
-    ax.axhline(0.5, color="gray", linestyle="--", linewidth=1, alpha=0.6)
+    ax.axhline(0.5, color="#c3c2b7", linewidth=0.9, zorder=0)   # chance
+    ax.axhline(0.42, color="#c3c2b7", linewidth=0.8, zorder=0)  # separates the n.e. band
     ax.set_xticks(list(DX_X.values()))
     ax.set_xticklabels(DX_ORDER, fontsize=11)
     ax.set_xlabel("Diagnosis class", fontsize=11)
-    ax.set_ylim(0.3, 1.05)
+    ax.set_xlim(-0.3, 2.3)
+    ax.set_ylim(0.3, 1.0)
+    ax.set_yticks([NE_Y, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+    ax.set_yticklabels(["not est.", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"])
     ax.set_title(EXP_LABELS[exp_name], fontsize=12, fontweight="bold")
     ax.spines[["top", "right"]].set_visible(False)
-    ax.grid(axis="y", alpha=0.3, linestyle="--")
+    ax.grid(axis="y", color="#e1e0d9", linewidth=0.8)
+    ax.set_axisbelow(True)
     if ax is axes[0]:
-        ax.set_ylabel("5-fold CV AUC (logreg balanced)", fontsize=11)
-        ax.legend(fontsize=9, framealpha=0.8, loc="upper left")
+        ax.set_ylabel("Five-fold CV AUC (balanced logistic regression)", fontsize=11)
+        ax.legend(fontsize=9, framealpha=0.9, loc="upper left")
 
-fig.suptitle(
-    "AUC stratified by diagnosis class\n"
-    r"($\times$ = unreliable: N$_+$ < 5)",
-    fontsize=13, fontweight="bold",
-)
 plt.tight_layout()
 
 for ext in ["png", "pdf"]:

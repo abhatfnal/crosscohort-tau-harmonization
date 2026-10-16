@@ -33,20 +33,42 @@ This repository contains the analysis code used for:
   Generates the primary severity-decomposition figure.
 
 - `build_table1_and_figure3.py`  
-  Builds Table 1 demographics and the harmonization comparison figure.
+  Builds Table 1 demographics and the CDR-SB = 0 prevalence figure (Fig. 3).
+
+- `harmonization_gap_table.py`  
+  Demo-only AUCs before and after feature harmonization (Table 2).
 
 - `summarize_crosscohort_severity_profiles.py`  
-  Summarizes cohort-level severity profiles.
+  Summarizes cohort-level severity profiles, including the NACC anchor row (Table 4).
 
 - `sensitivity_cdrsb0.py`  
   Sensitivity analysis for cognitively unimpaired / CDR-SB=0 subsets.
 
 - `oasis3_threshold_sensitivity.py`  
-  Sensitivity analysis for OASIS3 tau-threshold definitions.
+  OASIS3 tau-threshold sweep and the published OASIS-3 cutoff (Fig. S1, Table S5).
+
+- `logreg_feature_importance.py`  
+  Standardized coefficients of the reference-combined model (Table S6).
+
+- `dx_stratified_auc.py`  
+  Diagnosis-stratified feature-block AUCs (Fig. S2).
+
+- `oasis3_continuous_suvr_sensitivity.py`  
+  Within-OASIS3 continuous tauopathy SUVR analysis (Table S7, Fig. S3).
+
+- `nacc_at_strict_ablation_v1.py`  
+  NACC strict A/T feature-block ablation (all classifiers). Tables use its
+  `logreg_balanced` rows, not `best_model_per_experiment.csv`.
+
+- `nacc_additional_file4.py`  
+  NACC sensitivity table, main cohort and flortaucipir-only subset (Additional file 4).
+
+All tables and figures report balanced logistic regression, the prespecified
+primary classifier; random forest and extra-trees results are robustness checks only.
 
 ## Repository structure
 
-- `figures/` — manuscript figures
+- `figures/` — manuscript Figs. 2 and 3 (copied from the script outputs) and an early workflow schematic
 - `crosscohort_bootstrap_ci/` — bootstrap outputs
 - `crosscohort_matched_rerun/` — matched-feature rerun outputs
 - `crosscohort_publication_tables/` — publication-ready tables
@@ -66,7 +88,7 @@ Users must independently obtain dataset access through the relevant data use agr
 
 This repository supports the manuscript:
 
-**Feature harmonization reveals that apparent cross-cohort differences in tau-positivity prediction are driven by clinical severity and variable availability**
+**Feature harmonization reveals that apparent cross-cohort differences in tau-positivity prediction reflect variable availability and cohort stage structure**
 
 ## Author
 

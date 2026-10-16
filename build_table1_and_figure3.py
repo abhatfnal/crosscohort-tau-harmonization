@@ -11,10 +11,7 @@ import matplotlib.pyplot as plt
 # ---------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------
-DEFAULT_OUTDIR = (
-    "/project/aereditato/abhat/adni-mri-classification/"
-    "paper_tables_and_figures"
-)
+DEFAULT_OUTDIR = Path(__file__).resolve().parent / "paper_tables_and_figures"
 
 COHORT_CONFIG = [
     {
@@ -375,7 +372,7 @@ def plot_figure3(cdrsb0_df: pd.DataFrame, outdir: Path):
     ax.set_ylim(0, 110)
     ax.set_ylabel("Subjects with CDR-SB = 0 (%)", fontsize=12)
 
-    ax.yaxis.grid(True, color=GRID_COLOR, linestyle="--", linewidth=0.8, zorder=0)
+    ax.yaxis.grid(True, color=GRID_COLOR, linewidth=0.8, zorder=0)
     ax.set_axisbelow(True)
     ax.spines[["top", "right", "left"]].set_visible(False)
     ax.spines["bottom"].set_color("#AAAAAA")
@@ -392,24 +389,11 @@ def plot_figure3(cdrsb0_df: pd.DataFrame, outdir: Path):
         frameon=True,
         framealpha=0.9,
         edgecolor="#CCCCCC",
-        loc="upper right",
+        loc="upper left",
     )
 
-    ax.set_title(
-        "CDR-SB = 0 prevalence by cohort",
-        fontsize=13,
-        fontweight="bold",
-        pad=10,
-        loc="left",
-    )
-    ax.text(
-        0, 1.01,
-        "Functionally intact subjects as proxy for preclinical / early-stage enrichment",
-        transform=ax.transAxes,
-        fontsize=9,
-        color="#555555",
-        va="bottom",
-    )
+    # No in-figure title or subtitle: the manuscript caption carries both the title
+    # and the interpretation (clinically unimpaired enrichment, not preclinical AD).
 
     fig.tight_layout()
 

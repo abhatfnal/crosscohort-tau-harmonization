@@ -12,10 +12,19 @@ For each cohort × threshold combination the script reports:
   - 5-fold stratified CV AUC (logreg_balanced)
   - Whether the result meets the minimum-positive-class requirement (N_pos ≥ 10)
 
+The published OASIS-3 tauopathy cutoff (1.22; OASIS-3 Imaging Methods & Data
+Dictionary v2.0, Table 18, citing Mishra et al. 2017) is evaluated alongside the
+sweep. `Tauopathy` is the OASIS-distributed summary: the mean of the partial-
+volume-corrected (RSF) SUVRs in amygdala, entorhinal, inferior temporal and
+lateral occipital cortex, i.e. the same measure the cutoff was defined on.
+At the GMM midpoint and at the published cutoff the script also reports how
+many tau-positive participants are amyloid-negative or have CDR-SB = 0.
+
 Outputs:
   oasis3_threshold_sensitivity/
     threshold_sweep_results.csv
     threshold_sweep_plot.png / .pdf
+    published_cutoff_comparison.csv
 """
 from pathlib import Path
 import warnings
@@ -36,7 +45,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 warnings.filterwarnings("ignore")
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/oasis3_threshold_sensitivity")
+OUTDIR = Path(__file__).resolve().parent / "oasis3_threshold_sensitivity"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 COHORTS = {
@@ -54,11 +63,19 @@ COHORTS = {
 
 NUM_FEATURES = ["age_h", "apoe_e4_carrier_h", "apoe_e4_count_h", "education_years_h"]
 CAT_FEATURES = ["sex_h"]
+SEV_FEATURES = ["cdr_sumboxes_h", "faq_total_h"]
 MIN_POS_FOR_AUC = 10
 N_THRESHOLDS = 21   # odd number so midpoint is always included
 SWEEP_PCT = 0.30    # ±30 % around GMM midpoint
 N_SPLITS_CV = 5
 RANDOM_STATE = 42
+
+# OASIS-3 Imaging Data Dictionary v2.0, Table 18 (tauopathy, cerebellar cortex reference)
+PUBLISHED_CUTOFF = 1.22
+# Same dictionary, Table 11: native cerebellar-cortex RSF cutoffs for mean cortical SUVR
+AMYLOID_TRACER_COL = "tracer_y"
+AMYLOID_SUVR_COL = "PET_fSUVR_rsf_TOT_CORTMEAN"
+AMYLOID_RSF_CUTOFFS = {"PIB": 1.42, "AV45": 1.19}
 
 
 def gmm_midpoint(suvr: pd.Series) -> float:
@@ -120,7 +137,16 @@ def cv_auc(df: pd.DataFrame, num_cols, cat_cols, n_splits=N_SPLITS_CV):
     return float(np.mean(fold_aucs)) if fold_aucs else np.nan
 
 
+def amyloid_status(df: pd.DataFrame) -> pd.Series:
+    """1/0 amyloid positivity from the matched amyloid PET; NaN if unavailable."""
+    tracer = df[AMYLOID_TRACER_COL].astype(str).str.upper().str.replace("-", "", regex=False)
+    suvr = pd.to_numeric(df[AMYLOID_SUVR_COL], errors="coerce")
+    cutoff = tracer.map(AMYLOID_RSF_CUTOFFS)
+    return (suvr > cutoff).astype(float).where(suvr.notna() & cutoff.notna())
+
+
 rows = []
+cohort_frames = {}
 
 for cohort_key, cfg in COHORTS.items():
     print(f"\n{'='*60}")
@@ -142,14 +168,16 @@ for cohort_key, cfg in COHORTS.items():
     print(f"GMM midpoint threshold: {gmm_thr:.4f}")
     print(f"N with SUVR: {n_total}")
 
-    # Sweep thresholds ±SWEEP_PCT around GMM midpoint
+    # Sweep thresholds ±SWEEP_PCT around GMM midpoint, plus the published cutoff
     thresholds = np.linspace(
         gmm_thr * (1 - SWEEP_PCT),
         gmm_thr * (1 + SWEEP_PCT),
         N_THRESHOLDS,
     )
+    evaluated = [(thr, False) for thr in thresholds] + [(PUBLISHED_CUTOFF, True)]
+    cohort_frames[cohort_key] = (df.copy(), gmm_thr)
 
-    for thr in thresholds:
+    for thr, is_published in evaluated:
         df["y_target"] = (df["_suvr"] >= thr).astype(int)
         n_pos = int(df["y_target"].sum())
         n_neg = n_total - n_pos
@@ -157,9 +185,10 @@ for cohort_key, cfg in COHORTS.items():
 
         auc = cv_auc(df, NUM_FEATURES, CAT_FEATURES) if reliable else np.nan
         is_gmm = abs(thr - gmm_thr) < 1e-9
+        flag = "*" if is_gmm else ("P" if is_published else " ")
 
         print(
-            f"  thr={thr:.4f}{'*' if is_gmm else ' '}: "
+            f"  thr={thr:.4f}{flag}: "
             f"N+={n_pos:3d}, N-={n_neg:3d}, "
             f"AUC={'NA' if np.isnan(auc) else f'{auc:.3f}'}{'  [UNRELIABLE]' if not reliable else ''}"
         )
@@ -170,6 +199,7 @@ for cohort_key, cfg in COHORTS.items():
             "threshold": round(float(thr), 5),
             "gmm_midpoint": round(float(gmm_thr), 5),
             "is_gmm_threshold": is_gmm,
+            "is_published_cutoff": is_published,
             "pct_from_gmm": round(100 * (thr - gmm_thr) / gmm_thr, 1),
             "n_total": n_total,
             "n_pos": n_pos,
@@ -178,7 +208,7 @@ for cohort_key, cfg in COHORTS.items():
             "reliable": reliable,
         })
 
-results_df = pd.DataFrame(rows)
+results_df = pd.DataFrame(rows).sort_values(["cohort_key", "threshold"]).reset_index(drop=True)
 results_df.to_csv(OUTDIR / "threshold_sweep_results.csv", index=False)
 print(f"\nSaved: {OUTDIR / 'threshold_sweep_results.csv'}")
 
@@ -198,8 +228,12 @@ fig.subplots_adjust(wspace=0.35)
 
 ax_auc, ax_npos = axes
 
+NE_Y = 0.36   # "not estimated" band, kept clear of the AUC scale
+
 for cohort_key, cfg in COHORTS.items():
-    sub = results_df[results_df["cohort_key"] == cohort_key].copy()
+    cohort_rows = results_df[results_df["cohort_key"] == cohort_key]
+    sub = cohort_rows[~cohort_rows["is_published_cutoff"]].copy()
+    published = cohort_rows[cohort_rows["is_published_cutoff"]]
     reliable = sub[sub["reliable"]]
     unreliable = sub[~sub["reliable"]]
 
@@ -215,8 +249,13 @@ for cohort_key, cfg in COHORTS.items():
         )
     if not unreliable.empty:
         ax_auc.scatter(
-            unreliable["threshold"], [0.5] * len(unreliable),
+            unreliable["threshold"], [NE_Y] * len(unreliable),
             marker="x", color=color, s=30, zorder=3,
+        )
+    if not published.empty and published["reliable"].iloc[0]:
+        ax_auc.scatter(
+            published["threshold"], published["auc"],
+            marker="*", s=150, color=color, edgecolor="#0b0b0b", linewidth=0.6, zorder=4,
         )
 
     # Mark GMM midpoint
@@ -235,28 +274,33 @@ for cohort_key, cfg in COHORTS.items():
         ax_npos.axvline(gmm_row["threshold"].iloc[0], color=color, alpha=0.4,
                         linestyle=":", linewidth=1.2)
 
-ax_auc.axhline(0.5, color="gray", linestyle="--", linewidth=1, alpha=0.6)
+published_label = f"OASIS-3 published cutoff ({PUBLISHED_CUTOFF:.2f})"
+for ax in (ax_auc, ax_npos):
+    ax.axvline(PUBLISHED_CUTOFF, color="#52514e", linestyle="-.", linewidth=1.2,
+               label=published_label)
+
+ax_auc.axhline(0.5, color="#c3c2b7", linewidth=0.9, zorder=0)   # chance
+ax_auc.axhline(0.42, color="#c3c2b7", linewidth=0.8, zorder=0)  # separates the n.e. band
 ax_auc.set_xlabel("SUVR threshold", fontsize=11)
-ax_auc.set_ylabel("5-fold CV AUC (logreg balanced)", fontsize=11)
+ax_auc.set_ylabel("Five-fold CV AUC (balanced logistic regression)", fontsize=11)
 ax_auc.set_title("AUC vs tau positivity threshold", fontsize=12)
 ax_auc.set_ylim(0.3, 1.05)
-ax_auc.legend(fontsize=10, framealpha=0.8)
+ax_auc.set_yticks([NE_Y, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
+ax_auc.set_yticklabels(["not est.", "0.5", "0.6", "0.7", "0.8", "0.9", "1.0"])
+ax_auc.legend(fontsize=9, framealpha=0.9, loc="upper left")
 ax_auc.spines[["top", "right"]].set_visible(False)
-ax_auc.grid(axis="y", alpha=0.3, linestyle="--")
+ax_auc.grid(axis="y", color="#e1e0d9", linewidth=0.8)
+ax_auc.set_axisbelow(True)
 
 ax_npos.axhline(MIN_POS_FOR_AUC, color="crimson", linestyle="--",
                 linewidth=1.2, alpha=0.7, label=f"Min reliable (N={MIN_POS_FOR_AUC})")
 ax_npos.set_xlabel("SUVR threshold", fontsize=11)
 ax_npos.set_ylabel("N tau-positive", fontsize=11)
 ax_npos.set_title("Tau-positive count vs threshold", fontsize=12)
-ax_npos.legend(fontsize=10, framealpha=0.8)
+ax_npos.legend(fontsize=9, framealpha=0.9)
 ax_npos.spines[["top", "right"]].set_visible(False)
-ax_npos.grid(axis="y", alpha=0.3, linestyle="--")
-
-fig.suptitle(
-    "OASIS3 GMM threshold sensitivity (±30 % around midpoint)",
-    fontsize=13, fontweight="bold", y=1.01,
-)
+ax_npos.grid(axis="y", color="#e1e0d9", linewidth=0.8)
+ax_npos.set_axisbelow(True)
 
 plt.tight_layout()
 png = OUTDIR / "threshold_sweep_plot.png"
@@ -273,7 +317,8 @@ print("\n" + "="*60)
 print("SUMMARY — reliable AUC range per cohort")
 print("="*60)
 for cohort_key in COHORTS:
-    sub = results_df[(results_df["cohort_key"] == cohort_key) & results_df["reliable"]]
+    sub = results_df[(results_df["cohort_key"] == cohort_key) & results_df["reliable"]
+                     & ~results_df["is_published_cutoff"]]
     if sub.empty:
         print(f"{cohort_key}: no reliable AUC points")
         continue
@@ -284,3 +329,45 @@ for cohort_key in COHORTS:
         f"(at GMM midpoint: {gmm_auc_str}), "
         f"N_pos range {sub['n_pos'].min()}–{sub['n_pos'].max()}"
     )
+
+
+# ── Published cutoff vs GMM midpoint ──────────────────────────────────────────
+# Who does each definition call tau-positive? An AD-type tau endpoint should be
+# largely amyloid-positive; feature-block AUCs show how the decomposition moves.
+comparison_rows = []
+for cohort_key, cfg in COHORTS.items():
+    df, gmm_thr = cohort_frames[cohort_key]
+    amy = amyloid_status(df)
+    cdr0 = pd.to_numeric(df["cdr_sumboxes_h"], errors="coerce").eq(0)
+
+    for definition, thr in [("gmm_midpoint", gmm_thr), ("published_cutoff", PUBLISHED_CUTOFF)]:
+        df["y_target"] = (df["_suvr"] >= thr).astype(int)
+        tau_pos = df["y_target"].eq(1)
+        tau_pos_amy = tau_pos & amy.notna()
+        comparison_rows.append({
+            "cohort_key": cohort_key,
+            "cohort_label": cfg["label"],
+            "definition": definition,
+            "threshold": round(float(thr), 5),
+            "n_total": len(df),
+            "n_pos": int(tau_pos.sum()),
+            "pct_pos": round(100 * tau_pos.mean(), 1),
+            "n_with_amyloid": int(amy.notna().sum()),
+            "pct_amyloid_pos": round(100 * amy.mean(), 1),
+            "n_pos_with_amyloid": int(tau_pos_amy.sum()),
+            "n_pos_amyloid_neg": int((tau_pos_amy & amy.eq(0)).sum()),
+            "pct_pos_amyloid_neg": round(100 * amy[tau_pos_amy].eq(0).mean(), 1),
+            "n_pos_cdrsb0": int((tau_pos & cdr0).sum()),
+            "pct_pos_cdrsb0": round(100 * (tau_pos & cdr0).sum() / tau_pos.sum(), 1),
+            "auc_reference": round(cv_auc(df, NUM_FEATURES + SEV_FEATURES, CAT_FEATURES), 4),
+            "auc_severity": round(cv_auc(df, SEV_FEATURES, []), 4),
+            "auc_demo": round(cv_auc(df, NUM_FEATURES, CAT_FEATURES), 4),
+        })
+
+comparison_df = pd.DataFrame(comparison_rows)
+comparison_df.to_csv(OUTDIR / "published_cutoff_comparison.csv", index=False)
+print("\n" + "=" * 60)
+print("PUBLISHED CUTOFF vs GMM MIDPOINT")
+print("=" * 60)
+print(comparison_df.drop(columns=["cohort_key"]).to_string(index=False))
+print(f"Saved: {OUTDIR / 'published_cutoff_comparison.csv'}")
