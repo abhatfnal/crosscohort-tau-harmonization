@@ -40,3 +40,4 @@ paper_cohorts/
 *.joblib
 *.nii
 *.nii.gzmanuscript/
+manuscript/
