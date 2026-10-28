@@ -16,7 +16,7 @@ SUBJECT = {
     "oasis3_tau180_subject": "/project/aereditato/abhat/oasis/phase2_tau/severity_strip_tau180/subject_level_input_table.csv",
 }
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/crosscohort_matched_rerun/oasis_feature_audit")
+OUTDIR = Path(__file__).resolve().parent / "crosscohort_matched_rerun" / "oasis_feature_audit"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 

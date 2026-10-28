@@ -42,9 +42,8 @@ DATASETS = {
     },
 }
 
-MATCHED_RERUN_DIR = Path(
-    "/project/aereditato/abhat/adni-mri-classification/crosscohort_matched_rerun"
-)
+ROOT = Path(__file__).resolve().parent
+MATCHED_RERUN_DIR = ROOT / "crosscohort_matched_rerun"
 BEST_MODELS_CSV = MATCHED_RERUN_DIR / "best_model_per_experiment.csv"
 
 # Keep this EXACTLY aligned with the matched-feature publication tables
@@ -411,12 +410,12 @@ def main():
         choices=sorted(DATASETS.keys()),
         help="Primary cohorts by default. Add oasis3_tau90 if you want the supplement.",
     )
-    parser.add_argument("--n-bootstrap", type=int, default=300)
+    parser.add_argument("--n-bootstrap", type=int, default=1000)   # as reported in the manuscript
     parser.add_argument("--n-jobs", type=int, default=8)
     parser.add_argument("--seed", type=int, default=RANDOM_STATE)
     parser.add_argument(
         "--outdir",
-        default="/project/aereditato/abhat/adni-mri-classification/crosscohort_bootstrap_ci",
+        default=str(ROOT / "crosscohort_bootstrap_ci"),
     )
     args = parser.parse_args()
 

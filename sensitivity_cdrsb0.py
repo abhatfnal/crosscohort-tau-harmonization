@@ -28,7 +28,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 warnings.filterwarnings("ignore")
 
-OUTDIR = Path("/project/aereditato/abhat/adni-mri-classification/sensitivity_cdrsb0")
+OUTDIR = Path(__file__).resolve().parent / "sensitivity_cdrsb0"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 COHORTS = {

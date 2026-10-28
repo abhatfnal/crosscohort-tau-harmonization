@@ -205,6 +205,7 @@ for cohort_key, cfg in COHORTS.items():
             "n_pos": n_pos,
             "n_neg": n_neg,
             "auc": round(float(auc), 4) if not np.isnan(auc) else np.nan,
+            "auc_full": float(auc),   # unrounded, for reporting at 3 dp without double rounding
             "reliable": reliable,
         })
 
@@ -359,9 +360,9 @@ for cohort_key, cfg in COHORTS.items():
             "pct_pos_amyloid_neg": round(100 * amy[tau_pos_amy].eq(0).mean(), 1),
             "n_pos_cdrsb0": int((tau_pos & cdr0).sum()),
             "pct_pos_cdrsb0": round(100 * (tau_pos & cdr0).sum() / tau_pos.sum(), 1),
-            "auc_reference": round(cv_auc(df, NUM_FEATURES + SEV_FEATURES, CAT_FEATURES), 4),
-            "auc_severity": round(cv_auc(df, SEV_FEATURES, []), 4),
-            "auc_demo": round(cv_auc(df, NUM_FEATURES, CAT_FEATURES), 4),
+            "auc_reference": cv_auc(df, NUM_FEATURES + SEV_FEATURES, CAT_FEATURES),
+            "auc_severity": cv_auc(df, SEV_FEATURES, []),
+            "auc_demo": cv_auc(df, NUM_FEATURES, CAT_FEATURES),
         })
 
 comparison_df = pd.DataFrame(comparison_rows)
