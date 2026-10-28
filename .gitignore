@@ -39,4 +39,4 @@ paper_cohorts/
 *.pkl
 *.joblib
 *.nii
-*.nii.gz
+*.nii.gzmanuscript/
